@@ -1,3 +1,7 @@
 # job4j_grabber
-
-Grabber for vacancies parsing
+------------------------------------
+------------------------------------
+Grabber for Java vacancies parsing.
+Grabber would be staring by timer.
+------------------------------------
+------------------------------------
