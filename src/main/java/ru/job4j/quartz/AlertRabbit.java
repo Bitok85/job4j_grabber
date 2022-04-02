@@ -30,26 +30,27 @@ public class AlertRabbit implements AutoCloseable   {
                 .getClassLoader()
                 .getResourceAsStream("rabbit.properties")) {
             properties.load(in);
-            connection = initConnection(properties);
-            createTab(connection);
-            List<Long> store = new ArrayList<>();
-            Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
-            scheduler.start();
-            JobDataMap data = new JobDataMap();
-            data.put("connection", connection);
-            data.put("store", store);
-            JobDetail job = newJob(Rabbit.class).usingJobData(data).build();
-            SimpleScheduleBuilder times = simpleSchedule()
-                    .withIntervalInSeconds(getRabbitInterval(properties))
-                    .repeatForever();
-            Trigger trigger = newTrigger()
-                    .startNow()
-                    .withSchedule(times)
-                    .build();
-            scheduler.scheduleJob(job, trigger);
-            Thread.sleep(10000);
-            scheduler.shutdown();
-            System.out.println(store);
+            try (Connection connection = initConnection(properties)) {
+                createTab(connection);
+                List<Long> store = new ArrayList<>();
+                Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
+                scheduler.start();
+                JobDataMap data = new JobDataMap();
+                data.put("connection", connection);
+                data.put("store", store);
+                JobDetail job = newJob(Rabbit.class).usingJobData(data).build();
+                SimpleScheduleBuilder times = simpleSchedule()
+                        .withIntervalInSeconds(getRabbitInterval(properties))
+                        .repeatForever();
+                Trigger trigger = newTrigger()
+                        .startNow()
+                        .withSchedule(times)
+                        .build();
+                scheduler.scheduleJob(job, trigger);
+                Thread.sleep(10000);
+                scheduler.shutdown();
+                System.out.println(store);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
