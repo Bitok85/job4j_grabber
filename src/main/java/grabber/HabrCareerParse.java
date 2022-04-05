@@ -1,6 +1,5 @@
 package grabber;
 
-import grabber.utils.DateTimeParse;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -8,10 +7,6 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.Year;
-import java.time.format.DateTimeFormatter;
-import java.time.format.FormatStyle;
 import java.util.*;
 
 public class HabrCareerParse {
@@ -22,7 +17,6 @@ public class HabrCareerParse {
     private Map<String, Integer> convertMap = new HashMap<>();
 
     public static void main(String[] args) throws IOException {
-        HabrCareerParse habrCareerParse = new HabrCareerParse();
         Connection connection = Jsoup.connect(PAGE_LINK);
         Document document = connection.get();
         Elements rows = document.select(".vacancy-card__inner");
