@@ -15,7 +15,6 @@ public class HabrCareerParse {
     private  static final String SOURCE_LINK = "https://career.habr.com";
     private static final String PAGE_LINK =
             String.format("%s/vacancies/java_developer", SOURCE_LINK);
-    private Map<String, Integer> convertMap = new HashMap<>();
 
     public static void main(String[] args) throws IOException {
         HarbCareerDateTimeParser dtParser = new HarbCareerDateTimeParser();
