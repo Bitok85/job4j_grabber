@@ -1,5 +1,6 @@
 package grabber;
 
+import grabber.utils.HarbCareerDateTimeParser;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -17,6 +18,7 @@ public class HabrCareerParse {
     private Map<String, Integer> convertMap = new HashMap<>();
 
     public static void main(String[] args) throws IOException {
+        HarbCareerDateTimeParser dtParser = new HarbCareerDateTimeParser();
         Connection connection = Jsoup.connect(PAGE_LINK);
         Document document = connection.get();
         Elements rows = document.select(".vacancy-card__inner");
@@ -26,7 +28,11 @@ public class HabrCareerParse {
             Element linkElement = titleElement.child(0);
             String vacancyName = titleElement.text();
             String link = String.format("%s%s", SOURCE_LINK, linkElement.attr("href"));
-            System.out.printf("%s %s%n %s%n", vacancyName, link, dateElement.attr("datetime"));
+            System.out.printf(
+                    "%s %s%n %s%n",
+                    vacancyName,
+                    link,
+                    dtParser.localDateParse(dateElement.attr("datetime")));
         });
     }
 }
