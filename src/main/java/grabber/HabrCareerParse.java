@@ -8,6 +8,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.*;
 
 public class HabrCareerParse {
@@ -45,6 +46,19 @@ public class HabrCareerParse {
                         dtParser.localDateParse(dateElement.attr("datetime")));
             });
         }
+    }
+
+    public Post postParse(Element element) {
+        HarbCareerDateTimeParser dtParser = new HarbCareerDateTimeParser();
+        Element titleElement = element.select(".vacancy-card__title").first();
+        String title = titleElement.text();
+        String link = String.format("%s%s", SOURCE_LINK, titleElement.child(0).attr("href"));
+        Element descriptionElement =
+                element.select(".vacancy-card__icon-link").first().child(0);
+        String description = String.format("%s%s", link, descriptionElement.attr("href"));
+        Element dateElement = element.select(".vacancy-card__date").first().child(0);
+        LocalDateTime created = dtParser.localDateParse(dateElement.attr("datetime"));
+        return new Post(title, link, description, created);
     }
 
     private static String retrieveDescription(String link) throws IOException {
