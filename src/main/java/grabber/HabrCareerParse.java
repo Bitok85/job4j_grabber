@@ -18,9 +18,9 @@ public class HabrCareerParse {
 
     public static void main(String[] args) throws IOException {
         HarbCareerDateTimeParser dtParser = new HarbCareerDateTimeParser();
-        List<String> pages = pagesList(5);
-        for (String page : pages) {
-            Connection connection = Jsoup.connect(page);
+        for (int i = 1; i <= 5; i++) {
+            Connection connection =
+                    Jsoup.connect(String.format("%s%s", PAGE_LINK, "?page=" + i));
             Document document = connection.get();
             Elements rows = document.select(".vacancy-card__inner");
             rows.forEach(row -> {
@@ -36,18 +36,6 @@ public class HabrCareerParse {
                         dtParser.localDateParse(dateElement.attr("datetime")));
             });
         }
-
-    }
-
-    private static List<String> pagesList(int quantity) {
-        List<String> pages = new ArrayList<>();
-        StringBuilder stringBuilder = new StringBuilder(PAGE_LINK + "?page=");
-        for (int i = 1; i <= quantity; i++) {
-            pages.add(
-                    stringBuilder.append(String.valueOf(i)).toString()
-            );
-        }
-        return pages;
     }
 }
 
