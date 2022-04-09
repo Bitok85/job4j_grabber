@@ -1,5 +1,6 @@
 package grabber;
 
+import grabber.utils.HarbCareerDateTimeParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,8 +15,32 @@ import java.util.Properties;
 public class PsqlStore implements Store, AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(PsqlStore.class.getName());
+    private  static final String SOURCE_LINK = "https://career.habr.com";
+    private static final String PAGE_LINK =
+            String.format("%s/vacancies/java_developer", SOURCE_LINK);
     private Connection cn;
     private final String path = "db/scripts/post.sql";
+
+    public PsqlStore() {
+        initConnection();
+        createTab();
+    }
+
+    PsqlStore(Connection cn) {
+        this.cn = cn;
+    }
+
+    public static void main(String[] args) {
+        PsqlStore psqlStore = new PsqlStore();
+        HabrCareerParse parse = new HabrCareerParse(new HarbCareerDateTimeParser());
+        List<Post> postList = parse.list(PAGE_LINK);
+        System.out.println(postList.size());
+        postList.forEach(psqlStore::save);
+        List<Post> sqlPostList = psqlStore.getAll();
+        System.out.println(sqlPostList.size());
+        System.out.println(psqlStore.findById(10).getDescription());
+        System.out.println(psqlStore.findBySubString("QA").size());
+    }
 
     private void initConnection() {
         try (InputStream in = PsqlStore.class
@@ -47,7 +72,7 @@ public class PsqlStore implements Store, AutoCloseable {
     @Override
     public Post save(Post post) {
         try (PreparedStatement ps = cn.prepareStatement(
-                "insert into items (name, link, description, created) values (?, ?, ?, ?)",
+                "insert into post (name, link, description, created) values (?, ?, ?, ?)",
                 Statement.RETURN_GENERATED_KEYS
         )) {
             ps.setString(1, post.getTitle());
@@ -81,7 +106,7 @@ public class PsqlStore implements Store, AutoCloseable {
         } catch (SQLException e) {
             LOG.error("Error", e);
         }
-        return null;
+        return posts;
     }
 
     @Override
@@ -90,6 +115,7 @@ public class PsqlStore implements Store, AutoCloseable {
         try (PreparedStatement ps = cn.prepareStatement(
             "Select * from post where id = ?"
         )) {
+            ps.setInt(1, id);
             try (ResultSet resultSet = ps.executeQuery()) {
                 if (resultSet.next()) {
                     post = getDbPost(resultSet);
@@ -105,11 +131,13 @@ public class PsqlStore implements Store, AutoCloseable {
     public List<Post> findBySubString(String subString) {
         List<Post> posts = new ArrayList<>();
         try (PreparedStatement ps = cn.prepareStatement(
-                "select * from post where name like '%?%'"
+                "select * from post where name like ?"
         )) {
-            ps.setString(1, subString);
+            ps.setString(1, "%" + subString + "%");
             try (ResultSet resultSet = ps.executeQuery()) {
-                posts.add(getDbPost(resultSet));
+                while (resultSet.next()) {
+                    posts.add(getDbPost(resultSet));
+                }
             }
         } catch (SQLException e) {
             LOG.error("SqlException", e);
@@ -129,6 +157,7 @@ public class PsqlStore implements Store, AutoCloseable {
         try {
             post.setId(resultSet.getInt("id"));
             post.setTitle(resultSet.getString("name"));
+            post.setDescription(resultSet.getString("description"));
             post.setLink(resultSet.getString("link"));
             post.setCreated(resultSet.getTimestamp("created").toLocalDateTime());
         } catch (SQLException e) {
