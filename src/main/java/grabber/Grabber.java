@@ -6,7 +6,12 @@ import org.quartz.impl.StdSchedulerFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.nio.charset.Charset;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.util.List;
@@ -68,6 +73,28 @@ public class Grabber implements Grab {
 
     }
 
+    public void web(Store store) {
+        new Thread(() -> {
+            try (ServerSocket server =
+                         new ServerSocket(Integer.parseInt(config.getProperty("port")))) {
+                while (!server.isClosed()) {
+                    Socket socket = server.accept();
+                    try (OutputStream out = socket.getOutputStream()) {
+                        out.write("HTTP/1.1 200 OK\r\n\r\n".getBytes());
+                        for (Post post : store.getAll()) {
+                            out.write(
+                                    post.toString().getBytes(Charset.forName("Windows-1251"))
+                            );
+                            out.write((System.lineSeparator().getBytes()));
+                        }
+                    }
+                }
+            } catch (IOException e) {
+                LOG.error("IOException", e);
+            }
+        }).start();
+    }
+
     public static class GrabJob implements Job {
 
         @Override
@@ -87,5 +114,6 @@ public class Grabber implements Grab {
         Scheduler scheduler = grab.scheduler();
         Store store = grab.store();
         grab.init(new HabrCareerParse(new HarbCareerDateTimeParser()), store, scheduler);
+        grab.web(store);
     }
 }
