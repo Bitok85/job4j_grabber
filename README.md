@@ -1,7 +1,3 @@
 # job4j_grabber
-------------------------------------
-------------------------------------
-Grabber for Java vacancies parsing.
-Grabber would be staring by timer.
-------------------------------------
-------------------------------------
+
+Агрегатор Java вакансий, по умолчанию парсящий 5 первых страниц  https://career.habr.com/vacancies/java_developer
